@@ -1,0 +1,13 @@
+perbandingan,metrik,delta,p_mentah,p_holm,signifikan
+Full (Attn+Focal) vs Focal-only,Macro-F1,-0.0041,0.2754,1.0000,tidak
+Full (Attn+Focal) vs Focal-only,G-mean,0.0119,0.4922,1.0000,tidak
+Full (Attn+Focal) vs Focal-only,F1 (U2R),-0.0037,0.9219,1.0000,tidak
+Full (Attn+Focal) vs Focal-only,F1 (R2L),0.0008,0.4922,1.0000,tidak
+Attn-only vs Baseline,Macro-F1,-0.0073,0.5566,1.0000,tidak
+Attn-only vs Baseline,G-mean,0.0115,1.0000,1.0000,tidak
+Attn-only vs Baseline,F1 (U2R),-0.0088,0.8125,1.0000,tidak
+Attn-only vs Baseline,F1 (R2L),-0.0152,0.5566,1.0000,tidak
+Focal-only vs Baseline,Macro-F1,0.0568,0.0020,0.0234,ya
+Focal-only vs Baseline,G-mean,0.4685,0.0020,0.0234,ya
+Focal-only vs Baseline,F1 (U2R),0.1118,0.0039,0.0391,ya
+Focal-only vs Baseline,F1 (R2L),0.1420,0.0059,0.0527,tidak

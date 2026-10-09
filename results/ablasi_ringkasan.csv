@@ -1,0 +1,5 @@
+varian,pooling,loss,macro_f1,g_mean,f1_u2r,f1_r2l
+Full (Attn+Focal),class-specific attention,adaptive focal,0.6027 ± 0.0113,0.6358 ± 0.0251,0.1471 ± 0.0260,0.4083 ± 0.0575
+Attn-only,class-specific attention,cross-entropy,0.5426 ± 0.0145,0.1669 ± 0.1315,0.0302 ± 0.0407,0.2502 ± 0.0564
+Focal-only,mean-pooling,adaptive focal,0.6068 ± 0.0215,0.6239 ± 0.0298,0.1508 ± 0.0542,0.4075 ± 0.0541
+Baseline,mean-pooling,cross-entropy,0.5500 ± 0.0213,0.1554 ± 0.1466,0.0390 ± 0.0612,0.2654 ± 0.0819
