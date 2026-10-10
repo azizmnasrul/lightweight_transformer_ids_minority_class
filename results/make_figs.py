@@ -143,8 +143,9 @@ LEVEL = {
     "Baseline":          None,
 }
 
-def figure3():
-    df = pd.read_csv(os.path.join(HERE, "tabel3_multiseed.csv"))
+def figure3(csv="tabel3_multiseed.csv", out="fig3_tradeoff.png", minor=("U2R","R2L"),
+            xlim=(-2, 60), ylim=(0.455, 0.655), offsets=None):
+    df = pd.read_csv(os.path.join(HERE, csv))
     df["f1"]  = df["Macro-F1"].str.split("±").str[0].astype(float)
     df["sd"]  = df["Macro-F1"].str.split("±").str[1].astype(float)
     df["lat"] = df["Latency (ms)"].astype(float)
@@ -168,7 +169,7 @@ def figure3():
                    edgecolor=SURFACE, linewidth=1.2, zorder=3)
 
     # Label langsung pada setiap titik — identitas tidak pernah hanya lewat warna
-    offsets = {
+    offsets = offsets or {
         "Focal":             (-9,  -3, "right"),
         "ClassAttn + Focal": (10,   3, "left"),
         "SMOTE":             (10,  -3, "left"),
@@ -186,8 +187,8 @@ def figure3():
 
     ax.set_xlabel("Latensi inferensi CPU single-thread (ms)", color=INK)
     ax.set_ylabel("Macro-F1 (rerata 10 seed)", color=INK)
-    ax.set_xlim(-2, 60)
-    ax.set_ylim(0.455, 0.655)
+    ax.set_xlim(*xlim)
+    ax.set_ylim(*ylim)
     ax.tick_params(colors=INK_MUTED)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
@@ -206,11 +207,13 @@ def figure3():
     leg.get_title().set_fontsize(7)
     leg.get_title().set_color(INK)
 
-    ax.text(0.015, 0.945, "Luas penanda sebanding ukuran model (0,22–14,55 MB)",
+    ax.text(0.015, 0.945,
+            f"Luas penanda sebanding ukuran model "
+            f"({df['mb'].min():.2f}–{df['mb'].max():.2f} MB)".replace(".", ","),
             transform=ax.transAxes, fontsize=6.5, color=INK_MUTED)
 
     fig.tight_layout()
-    out = os.path.join(HERE, "fig3_tradeoff.png")
+    out = os.path.join(HERE, out)
     fig.savefig(out, bbox_inches="tight", facecolor=SURFACE)
     fig.savefig(out.replace(".png", ".pdf"), bbox_inches="tight", facecolor=SURFACE)
     plt.close(fig)
@@ -220,3 +223,13 @@ def figure3():
 if __name__ == "__main__":
     figure2()
     figure3()
+    figure3(csv="tabel3_multiseed_cicids2017.csv", out="fig3_tradeoff_cicids2017.png",
+            minor=("Bot", "WebAttack"), xlim=(-6, 190), ylim=(0.70, 1.01),
+            offsets={"XGBoost": (11, -3, "left"),
+                     "Voting (RF+XGB)": (13, -3, "left"),
+                     "Random Forest": (-13, -4, "right"),
+                     "SMOTE": (12, -3, "left"),
+                     "ClassAttn": (-11, -4, "right"),
+                     "Baseline": (12, -3, "left"),
+                     "ClassAttn + Focal": (-13, 6, "right"),
+                     "Focal": (-12, -3, "right")})
