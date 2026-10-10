@@ -84,6 +84,44 @@ dataset yang sebenarnya: efektivitas tiap tingkat intervensi bergantung pada
 dataset, dan tidak ada satu pun konfigurasi Transformer yang mengalahkan
 XGBoost pada CICIDS2017.
 
-Belum tersedia: peta panas attention untuk CICIDS2017 (`attn_mean` hilang saat
-runtime Colab di-recycle). Figur itu akan menjelaskan mengapa attention
-berhasil di sini namun tidak di NSL-KDD, dan perlu run ulang sel attention.
+## Peta panas attention — pembanding lintas dataset
+
+`attn_mean_cicids2017.json` (9 × 79, lengkap dengan nama fitur) dan
+`fig2_attention_heatmap_cicids2017.png` / `.pdf`.
+
+Entropi ternormalisasi attention per kelas, diurutkan dari paling terkonsentrasi:
+
+| CICIDS2017 | H/H_maks | puncak | | NSL-KDD | H/H_maks | puncak |
+|---|---|---|---|---|---|---|
+| Bot | **0,678** | 20,8× | | R2L | 0,808 | 12,4× |
+| Infiltration | **0,803** | 14,2× | | Probe | 0,958 | 5,0× |
+| BruteForce | 0,882 | 11,4× | | DoS | 0,981 | 2,4× |
+| PortScan | 0,892 | 11,6× | | **U2R** | **0,987** | **2,1×** |
+| WebAttack | 0,925 | 8,8× | | Normal | 0,990 | 2,2× |
+| DoS | 0,914 | 5,2× | | | | |
+| Heartbleed | 0,939 | 6,0× | | | | |
+| DDoS | 0,955 | 7,0× | | | | |
+| Normal | 0,958 | 6,6× | | | | |
+| **rerata 0,883** | | | | **rerata 0,945** | | |
+
+Inilah penjelasan mekanistik atas pembalikan hasil itu, dan arahnya persis
+berlawanan:
+
+- **NSL-KDD** — kelas paling langka, U2R, justru yang attention-nya **paling
+  seragam** (0,987; puncak hanya 2,1× seragam). Query khusus kelas tersedia
+  tetapi praktis menganggur tepat di tempat ia dirancang untuk bekerja.
+  Konsisten dengan Attn-only yang tidak berbeda dari baseline (p-Holm 1,0000).
+- **CICIDS2017** — dua kelas minoritas, Bot dan Infiltration, justru yang
+  attention-nya **paling terkonsentrasi** (0,678 dan 0,803; puncak 20,8× dan
+  14,2×). Mekanismenya aktif, dan Attn-only memang mengungguli baseline secara
+  signifikan.
+
+Dengan kata lain: class-query attention menolong bila — dan hanya bila — ada
+fitur yang benar-benar diskriminatif untuk dipilih. NSL-KDD tidak menyediakannya
+untuk U2R; CICIDS2017 menyediakannya untuk Bot.
+
+Peringatan yang perlu ditulis di naskah: `min_seg_size_forward` menjadi puncak
+bagi 7 dari 9 query kelas. Fitur ini sudah lama dicurigai sebagai artefak
+CICIDS2017; bila ia yang dipakai model, sebagian keunggulan Attn-only bisa jadi
+shortcut learning, bukan deteksi serangan yang sesungguhnya. Uji ulang tanpa
+fitur tersebut adalah pekerjaan lanjutan yang layak disebut sebagai limitation.

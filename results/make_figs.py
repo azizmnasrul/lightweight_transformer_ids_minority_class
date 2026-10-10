@@ -45,16 +45,18 @@ NEUTRAL = "#8a8a86"   # untuk baseline tanpa penanganan imbalance
 # ----------------------------------------------------------------------------
 # Gambar 2 — peta panas bobot attention per kelas
 # ----------------------------------------------------------------------------
-def figure2(feat_names=None):
-    d = json.load(open(os.path.join(HERE, "attn_mean.json")))
+def figure2(src="attn_mean.json", out="fig2_attention_heatmap.png",
+            order=("Normal", "DoS", "Probe", "R2L", "U2R"), feat_names=None,
+            tick_every=5, height=2.35):
+    d = json.load(open(os.path.join(HERE, src)))
     A = np.asarray(d["a"], dtype=float)
     classes = d["c"]
+    feat_names = feat_names if feat_names is not None else d.get("t")
     A = A / A.sum(axis=1, keepdims=True)          # baris = distribusi
     n_cls, n_feat = A.shape
     uniform = 1.0 / n_feat
 
-    # Urutkan baris agar kelas minoritas berada di bawah (U2R paling langka)
-    order = ["Normal", "DoS", "Probe", "R2L", "U2R"]
+    # Urutkan baris: kelas terbanyak di atas, paling langka di bawah
     idx = [classes.index(c) for c in order if c in classes]
     A, classes = A[idx], [classes[i] for i in idx]
 
@@ -70,7 +72,7 @@ def figure2(feat_names=None):
     R = np.log2(A / uniform)
     norm = TwoSlopeNorm(vmin=float(R.min()), vcenter=0.0, vmax=float(R.max()))
 
-    fig, ax = plt.subplots(figsize=(7.16, 2.35))
+    fig, ax = plt.subplots(figsize=(7.16, height))
     fig.patch.set_facecolor(SURFACE)
     ax.set_facecolor(SURFACE)
 
@@ -79,28 +81,41 @@ def figure2(feat_names=None):
 
     ax.set_yticks(range(n_cls))
     ax.set_yticklabels(classes, color=INK)
-    xt = list(range(0, n_feat, 5))
-    ax.set_xticks(xt)
-    ax.set_xticklabels([(feat_names[i] if feat_names else str(i)) for i in xt],
-                       color=INK_MUTED,
-                       rotation=90 if feat_names else 0)
-    ax.set_xlabel("Indeks token fitur", color=INK)
 
-    for s in ax.spines.values():
-        s.set_edgecolor(GRID)
+    # Sumbu x: dengan 79 token, melabeli semuanya membuat gambar tidak terbaca.
+    # Yang dilabeli hanya token yang menjadi puncak bagi salah satu kelas —
+    # itulah yang dibaca orang dari peta panas ini.
+    peaks = sorted({int(np.argmax(A[i])) for i in range(n_cls)})
+    if feat_names:
+        ax.set_xticks(range(n_feat), minor=True)
+        ax.set_xticks(peaks)
+        ax.set_xticklabels([feat_names[i] for i in peaks], color=INK,
+                           rotation=38, ha="right", rotation_mode="anchor")
+        ax.tick_params(axis="x", which="minor", length=2, color=GRID)
+        ax.set_xlabel(f"Token fitur (ditandai: puncak attention tiap kelas, "
+                      f"dari {n_feat} token)", color=INK)
+    else:
+        xt = list(range(0, n_feat, tick_every))
+        ax.set_xticks(xt)
+        ax.set_xticklabels([str(i) for i in xt], color=INK_MUTED)
+        ax.set_xlabel("Indeks token fitur", color=INK)
 
-    # Dua kolom ringkasan di tepi kanan, agar tidak menimpa sel mana pun
-    c_max, c_ent = n_feat + 1.4, n_feat + 6.2
+    for sp in ax.spines.values():
+        sp.set_edgecolor(GRID)
+
+    # Dua kolom ringkasan di tepi kanan, jaraknya sebanding lebar peta
+    gap = max(1.6, 0.035 * n_feat)
+    c_max, c_ent = n_feat + gap, n_feat + 4.3 * gap
     for i, h in enumerate(H):
-        ax.text(c_max, i, f"{A[i].max() / uniform:.1f}×", va="center",
+        ax.text(c_max, i, f"{A[i].max() / uniform:.1f}\u00d7", va="center",
                 ha="center", fontsize=7, color=INK)
         ax.text(c_ent, i, f"{h:.3f}", va="center", ha="center",
                 fontsize=7, color=INK)
-    ax.text(c_max, -1.05, "puncak", va="center", ha="center",
+    ax.text(c_max, -0.95, "puncak", va="bottom", ha="center",
             fontsize=7, color=INK)
-    ax.text(c_ent, -1.05, "$H/H_{maks}$", va="center", ha="center",
+    ax.text(c_ent, -0.95, "$H/H_{maks}$", va="bottom", ha="center",
             fontsize=7, color=INK)
-    ax.set_xlim(-0.5, n_feat + 8.6)
+    ax.set_xlim(-0.5, n_feat + 6.0 * gap)
 
     # Tandai bobot puncak tiap baris
     for i in range(n_cls):
@@ -117,7 +132,7 @@ def figure2(feat_names=None):
     cb.set_label("Bobot relatif terhadap seragam", fontsize=7, color=INK)
 
     fig.tight_layout()
-    out = os.path.join(HERE, "fig2_attention_heatmap.png")
+    out = os.path.join(HERE, out)
     fig.savefig(out, bbox_inches="tight", facecolor=SURFACE)
     fig.savefig(out.replace(".png", ".pdf"), bbox_inches="tight", facecolor=SURFACE)
     plt.close(fig)
@@ -222,6 +237,10 @@ def figure3(csv="tabel3_multiseed.csv", out="fig3_tradeoff.png", minor=("U2R","R
 
 if __name__ == "__main__":
     figure2()
+    figure2(src="attn_mean_cicids2017.json", out="fig2_attention_heatmap_cicids2017.png",
+            order=("Normal", "DoS", "DDoS", "PortScan", "BruteForce",
+                   "WebAttack", "Bot", "Infiltration", "Heartbleed"),
+            tick_every=1, height=3.5)
     figure3()
     figure3(csv="tabel3_multiseed_cicids2017.csv", out="fig3_tradeoff_cicids2017.png",
             minor=("Bot", "WebAttack"), xlim=(-6, 190), ylim=(0.70, 1.01),
