@@ -261,6 +261,11 @@ A(text_para("H1", "V. KESIMPULAN"))
 for i, s in enumerate(depan["babV"]):
     A(text_para("PARA" if i == 0 else "PARAIndent", s))
 
+# -------------------------------------------- pengungkapan AI (wajib IEEE)
+A(text_para("H1", depan["klausul_ai_judul"]))
+for i, s in enumerate(depan["klausul_ai"]):
+    A(text_para("PARA" if i == 0 else "PARAIndent", s))
+
 # ---------------------------------------------------------------- pustaka
 A(text_para("H1", "REFERENSI"))
 for r in refs:
